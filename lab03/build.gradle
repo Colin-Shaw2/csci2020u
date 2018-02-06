@@ -1,0 +1,33 @@
+apply plugin: 'java'
+
+
+repositories {
+    mavenCentral()
+}
+
+
+sourceCompatibility = 1.8
+version = '1.0'
+dependencies {
+  compile 'org.apache.commons:commons-csv:1.5'
+}
+
+task fatJar(type: Jar) {
+	manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',
+        	'Implementation-Version': version,
+        	'Main-Class': 'com.mkyong.DateUtils'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+
+jar{
+  manifest{
+  attributes 'Main-Class': 'CSVDemo',
+  'Implementation-Title': 'Lab03',
+  'Implementation-Version': version
+  }
+}

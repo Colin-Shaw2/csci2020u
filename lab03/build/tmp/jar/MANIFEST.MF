@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Main-Class: CSVDemo
+Implementation-Title: Lab03
+Implementation-Version: 1.0
+
