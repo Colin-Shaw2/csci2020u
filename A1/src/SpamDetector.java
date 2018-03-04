@@ -13,8 +13,8 @@ public class SpamDetector {
   }
 
   public void processFile(File file) throws IOException {
-    System.out.println("Processing " + file.getAbsolutePath() + "...");
     if (file.isDirectory()) {
+      System.out.println("Processing " + file.getAbsolutePath() + "...");
       // process all the files in that directory
       File[] contents = file.listFiles();
       for (File current: contents) {
@@ -66,49 +66,62 @@ public class SpamDetector {
     System.out.println("Saving word counts to " + outFile.getAbsolutePath());
     System.out.println("# of words: " + wordCounts.keySet().size());
     System.out.println("# of files: " + filenum);
-    if (outFile.exists()) {
-      outFile.createNewFile();
-      if (outFile.canWrite()) {
-        PrintWriter fileOut = new PrintWriter(outFile);
 
-        Set<String> keys = wordCounts.keySet();
-        Iterator<String> keyIterator = keys.iterator();
+    outFile.createNewFile();
+    if (outFile.canWrite()) {
+      PrintWriter fileOut = new PrintWriter(outFile);
 
-        while (keyIterator.hasNext()) {
-          String key = keyIterator.next();
-          int count = wordCounts.get(key);
+      Set<String> keys = wordCounts.keySet();
+      Iterator<String> keyIterator = keys.iterator();
 
-          if (count >= minCount) {
-            fileOut.println(key + ": " + count);
-          }
+      while (keyIterator.hasNext()) {
+        String key = keyIterator.next();
+        int count = wordCounts.get(key);
+
+        if (count >= minCount) {
+          fileOut.println(key + ": " + count);
         }
-
-        fileOut.close();
-      } else {
-        System.err.println("Error:  Cannot write to file: " + outFile.getAbsolutePath());
       }
+
+      fileOut.close();
     } else {
-      System.err.println("Error:  File already exists: " + outFile.getAbsolutePath());
-      System.out.println("outFile.exists(): " + outFile.exists());
-      System.out.println("outFile.canWrite(): " + outFile.canWrite());
+      System.err.println("Error:  Cannot write to file: " + outFile.getAbsolutePath());
+    }
+
+    if (outFile.exists()) {
+      System.err.println("File already exists: Overwriting  " + outFile.getAbsolutePath());
     }
   }
 
   public static void main(String[] args) {
     if (args.length < 2) {
-      System.err.println("Usage: java SpamDetector <dir> <outfile>");
+      System.err.println("Usage: java SpamDetector <dir/ham> <dir/spam>");
       System.exit(0);
     }
 
     SpamDetector SpamDetector = new SpamDetector();
-    File dataDir = new File(args[0]);
-    File outFile = new File(args[1]);
+    File hamDir = new File(args[0]);
+    File spamDir = new File(args[1]);
+    File outFileHam = new File("hamWords.txt");
+    File outFileSpam = new File("spamWords.txt");
 
     try {
-      SpamDetector.processFile(dataDir);
-      SpamDetector.outputWordCounts(2, outFile);
+      SpamDetector.processFile(spamDir);
+      SpamDetector.outputWordCounts(2, outFileHam);
     } catch (FileNotFoundException e) {
-      System.err.println("Invalid input dir: " + dataDir.getAbsolutePath());
+      System.err.println("Invalid input dir: " + spamDir.getAbsolutePath());
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+
+
+    try {
+      SpamDetector.processFile(hamDir);
+      SpamDetector.outputWordCounts(2, outFileSpam);
+    } catch (FileNotFoundException e) {
+      System.err.println("Invalid input dir: " + spamDir.getAbsolutePath());
       e.printStackTrace();
     } catch (IOException e) {
       e.printStackTrace();
