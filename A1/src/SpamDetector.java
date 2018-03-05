@@ -12,6 +12,7 @@ public class SpamDetector {
   public static int spamFileNum =0;
   public static Map<String,Integer> trainHamFreq = new TreeMap<>();
   public static Map<String,Integer> trainSpamFreq = new TreeMap<>();
+  public static Map<String,Float> probOfSpamGivenWord = new TreeMap<>();
 
 
   public static Map<String, Integer> processFile(File file) throws IOException {
@@ -117,36 +118,9 @@ public class SpamDetector {
     //Map<String,Integer> trainHamFeq;
     try {
       trainHamFreq = processFile(hamDir);
-      outputWordCounts(1, outFileHam, trainHamFreq);
+    //  outputWordCounts(1, outFileHam, trainHamFreq);
       hamFileNum = filenum;
       filenum=0;
-
-
-/*
-
-      Map<String, Float> probOfSpamGivenWord = new TreeMap<>();
-
-      Set<String> keys = trainHamFreq.keySet();
-      Iterator<String> keyIterator = keys.iterator();
-
-          System.out.println(keyIterator.hasNext());
-      while (keyIterator.hasNext()) {
-        String key = keyIterator.next();
-        int count = trainSpamFreq.get(key);
-
-        float probHam = count/hamFileNum;
-        System.out.println(probHam);
-        //probOfSpamGivenWord.put(key, prob);
-
-          //fileOut.println(key + ": " + count);
-
-      }
-
-
-
-*/
-
-
 
     } catch (FileNotFoundException e) {
       System.err.println("Invalid input dir: " + hamDir.getAbsolutePath());
@@ -159,14 +133,49 @@ public class SpamDetector {
 
     try {
       trainSpamFreq = processFile(spamDir);
-      outputWordCounts(1, outFileSpam, trainSpamFreq);
+      //outputWordCounts(1, outFileSpam, trainSpamFreq);
       spamFileNum = filenum;
       filenum=0;
+
     } catch (FileNotFoundException e) {
       System.err.println("Invalid input dir: " + spamDir.getAbsolutePath());
       e.printStackTrace();
     } catch (IOException e) {
       e.printStackTrace();
+    }
+
+
+
+    //We are only going to look through the spam map because if the word is
+    //only in the ham map the result is always 0
+
+    Set<String> keys = trainSpamFreq.keySet();
+    Iterator<String> keyIterator = keys.iterator();
+
+    while (keyIterator.hasNext()) {
+      String key = keyIterator.next();
+      int spamCount = trainSpamFreq.get(key);
+
+      float probSpam = (float)spamCount/(float)spamFileNum;
+      int hamCount =0;
+      if (null == trainHamFreq.get(key)){
+        hamCount = 0;
+      }
+      else{
+        hamCount = trainHamFreq.get(key);
+      }
+
+      float probHam = (float)hamCount/(float)hamFileNum;
+
+      System.out.println(probHam+probSpam);
+      if(probHam+probSpam!=0){
+        probOfSpamGivenWord.put(key, (probSpam/(probSpam+probHam)));
+      }
+      else{
+        probOfSpamGivenWord.put(key, (float)0);
+      }
+      System.out.println(probOfSpamGivenWord.get(key));
+
     }
 
   }
