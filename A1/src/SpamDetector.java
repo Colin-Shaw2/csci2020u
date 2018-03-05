@@ -35,6 +35,7 @@ public class SpamDetector {
           wordCounts = countWord(word, wordCounts);
           counted.add(word);
         }
+        counted.clear();
       }
     }
     return wordCounts;
@@ -116,8 +117,7 @@ public class SpamDetector {
     //Map<String,Integer> trainHamFeq;
     try {
       trainHamFreq = processFile(hamDir);
-      System.out.println(trainHamFreq);
-      //outputWordCounts(1, outFileHam, trainHamFreq);
+      outputWordCounts(1, outFileHam, trainHamFreq);
       hamFileNum = filenum;
       filenum=0;
 
@@ -159,7 +159,7 @@ public class SpamDetector {
 
     try {
       trainSpamFreq = processFile(spamDir);
-      //outputWordCounts(1, outFileSpam, trainSpamFreq);
+      outputWordCounts(1, outFileSpam, trainSpamFreq);
       spamFileNum = filenum;
       filenum=0;
     } catch (FileNotFoundException e) {
