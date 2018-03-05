@@ -1,22 +1,15 @@
-package sample;
+//package sample;
 
+//import sample;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
-import static sample.SpamDetector.main;
 
-//import static sample.DataSource.getAllMarks;
 
 
 public class Main extends Application {
@@ -53,7 +46,7 @@ public class Main extends Application {
 
         TableColumn<TestFile, Integer> probCol = new TableColumn<>("Spam Probability");
         probCol.setPrefWidth(150);
-        probCol.setCellValueFactory(new PropertyValueFactory<>("SpamProbability"));
+        probCol.setCellValueFactory(new PropertyValueFactory<>("SpamProbRounded"));
 
 
 
@@ -71,14 +64,19 @@ public class Main extends Application {
 
 
         //Set our variables
-        Label accuracyLabel = new Label("Accuracy:");
+
+        double accuracy = SpamDetector.getAccuracy();
+        Label accuracyLabel = new Label("Accuracy: " + accuracy);
         //accuracy = new TextField();
         //accuracy.setPromptText("Accuracy");
         //accuracy.setDisable(true);
 
         layout.add(accuracyLabel,0,1);
 
-        Label precisionLabel = new Label("Precision:");
+
+
+        double precision = SpamDetector.getPrecision();
+        Label precisionLabel = new Label("Precision: " + precision);
         //precision = new TextField();
         //precision.setPromptText("Precision");
         //precision.setDisable(true);
