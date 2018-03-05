@@ -83,37 +83,6 @@ public class SpamDetector {
   }
 
 
-  public static void outputWordCounts(int minCount, File outFile, Map<String, Integer> wordCounts)
-    throws IOException {
-    System.out.println("Saving word counts to " + outFile.getAbsolutePath());
-    System.out.println("# of words: " + wordCounts.keySet().size());
-    System.out.println("# of files: " + filenum);
-
-    outFile.createNewFile();
-    if (outFile.canWrite()) {
-      PrintWriter fileOut = new PrintWriter(outFile);
-
-      Set<String> keys = wordCounts.keySet();
-      Iterator<String> keyIterator = keys.iterator();
-
-      while (keyIterator.hasNext()) {
-        String key = keyIterator.next();
-        int count = wordCounts.get(key);
-
-        if (count >= minCount) {
-          fileOut.println(key + ": " + count);
-        }
-      }
-
-      fileOut.close();
-    } else {
-      System.err.println("Error:  Cannot write to file: " + outFile.getAbsolutePath());
-    }
-
-    if (outFile.exists()) {
-      System.err.println("File already exists: Overwriting  " + outFile.getAbsolutePath());
-    }
-  }
 
 
   private static void isSpamProbability(File file) throws IOException {
@@ -155,9 +124,8 @@ public class SpamDetector {
     }
 
   public static ArrayList<TestFile> runAll(String[] args){
-
-    File hamDir = new File("data/train/ham2");
-    File spamDir = new File("data/train/spam");
+    File hamDir = new File(args[0]+"/train/ham");
+    File spamDir = new File(args[0]+"/train/spam");
 
 
 
@@ -230,13 +198,15 @@ public class SpamDetector {
       float hamCount = trainHamFreq.get(key);
 
       if(null == trainSpamFreq.get(key)){
-        probOfSpamGivenWord.put(key, (1/(float)spamFileNum)/((1/(float)spamFileNum)+(hamCount/(float)hamFileNum)));
+      //  probOfSpamGivenWord.put(key, (1/(float)spamFileNum)/((1/(float)spamFileNum)+(hamCount/(float)hamFileNum)));
+        probOfSpamGivenWord.put(key, hamCount/hamFileNum);
       }
     }
 
     try{
-    isSpamProbability(new File("data/test/ham"));
-    isSpamProbability(new File("data/test/spam"));
+    isSpamProbability(new File(args[0]+"/test/ham"));
+    isSpamProbability(new File(args[0]+"/test/spam"));
+
   } catch (IOException e) {
     e.printStackTrace();
   }
@@ -247,8 +217,8 @@ public class SpamDetector {
   public static double getAccuracy(){
     double correct=0;
     for(int i=0;i<testedFiles.size();i++){
-      if(((testedFiles.get(i).getActualClass().compareTo("spam")!=0)&&testedFiles.get(i).getSpamProbability()>0.5) ||
-      ((testedFiles.get(i).getActualClass().compareTo("ham")!=0)&&testedFiles.get(i).getSpamProbability()<=0.5)){
+      if(((testedFiles.get(i).getActualClass().compareTo("spam")==0)&&testedFiles.get(i).getSpamProbability()>=0.5) ||
+      ((testedFiles.get(i).getActualClass().compareTo("ham")==0)&&testedFiles.get(i).getSpamProbability()<=0.5)){
         correct++;
       }
     }
@@ -259,9 +229,9 @@ public class SpamDetector {
     double truePos=0;
     double falsePos=0;
     for(int i=0;i<testedFiles.size();i++){
-      if((testedFiles.get(i).getActualClass().compareTo("spam")!=0)&&testedFiles.get(i).getSpamProbability()>0.5){
+      if((testedFiles.get(i).getActualClass().compareTo("spam")==0)&&testedFiles.get(i).getSpamProbability()>0.5){
         truePos++;
-      }else if((testedFiles.get(i).getActualClass().compareTo("ham")!=0)&&testedFiles.get(i).getSpamProbability()>0.5){
+      }else if((testedFiles.get(i).getActualClass().compareTo("ham")==0)&&testedFiles.get(i).getSpamProbability()>0.5){
         falsePos++;
       }
     }
