@@ -7,22 +7,22 @@ public class SpamDetector {
 //  private Map<String,Integer> trainHamFreq;
   //private Map<String,Integer> trainSpamFreq;
 
-  public static int filenum =0;
-  public static int hamFileNum =0;
-  public static int spamFileNum =0;
-  public static Map<String,Integer> trainHamFreq = new TreeMap<>();
-  public static Map<String,Integer> trainSpamFreq = new TreeMap<>();
-  public static Map<String,Float> probOfSpamGivenWord = new TreeMap<>();
-  public static ArrayList<TestFile> testedFiles = new ArrayList<>();
+  private static int filenum =0;
+  private static int hamFileNum =0;
+  private static int spamFileNum =0;
+  private static Map<String,Integer> trainHamFreq = new TreeMap<>();
+  private static Map<String,Integer> trainSpamFreq = new TreeMap<>();
+  private static Map<String,Float> probOfSpamGivenWord = new TreeMap<>();
+  private static ArrayList<TestFile> testedFiles = new ArrayList<>();
 
-  public static Map<String, Integer> processFile(File file) throws IOException {
+  private static Map<String, Integer> processFile(File file) throws IOException {
     Map<String,Integer> wordCounts = new TreeMap<>();
     if (file.isDirectory()) {
       System.out.println("Processing " + file.getAbsolutePath() + "...");
       // process all the files in that directory
       File[] contents = file.listFiles();
       for (File current: contents) {
-        Map<String,Integer> temp = new TreeMap<>();
+        Map<String,Integer> temp;
         temp = processFile(current);
 
         Set<String> keys = temp.keySet();
@@ -46,7 +46,7 @@ public class SpamDetector {
     } else if (file.exists()) {
       filenum++;
       // count the words in this file
-      ArrayList<String> counted = new ArrayList<String>();
+      ArrayList<String> counted = new ArrayList<>();
       Scanner scanner = new Scanner(file);
       scanner.useDelimiter("\\s");//"[\s\.;:\?\!,]");//" \t\n.;,!?-/\\");
       while (scanner.hasNext()) {
@@ -63,14 +63,8 @@ public class SpamDetector {
 
   private static boolean isWord(String word) {
     String pattern = "^[a-zA-Z]+$";
-    if (word.matches(pattern)) {
-      return true;
-    } else {
-      return false;
-    }
+    return word.matches(pattern);
 
-    // also fine:
-    //return word.matches(pattern);
   }
 
   private static Map<String, Integer> countWord(String word, Map<String, Integer> wordCounts) {
@@ -83,9 +77,6 @@ public class SpamDetector {
     return wordCounts;
   }
 
-//  private boolean isCounted(String word, ArrayList<String> counted){
-  //  return counted.contains(word);
-  //}
 
   public static void outputWordCounts(int minCount, File outFile, Map<String, Integer> wordCounts)
     throws IOException {
@@ -120,7 +111,7 @@ public class SpamDetector {
   }
 
 
-  public static void isSpamProbability(File file) throws IOException {
+  private static void isSpamProbability(File file) throws IOException {
     if (file.isDirectory()) {
       System.out.println("Testing " + file.getAbsolutePath() + "...");
       // process all the files in that directory
@@ -141,7 +132,10 @@ public class SpamDetector {
         }
       }
       double probEst = 1/(1+Math.pow(Math.E,probSum));
-      testedFiles.add(new TestFile(file.getName(),probEst,file.getParent()));
+      String[] actualTypeArr = file.getParent().split("/");
+      String actualType = actualTypeArr[actualTypeArr.length-1];
+      System.out.println(actualType);
+      testedFiles.add(new TestFile(file.getName(),probEst, actualType));
     }
   }
 
@@ -152,7 +146,6 @@ public class SpamDetector {
       //System.exit(0);
     }
 
-    SpamDetector SpamDetector = new SpamDetector();
   //  File hamDir = new File(args[0]);
     //File spamDir = new File(args[1]);
     File hamDir = new File("data/train/ham");
@@ -203,7 +196,7 @@ public class SpamDetector {
       int spamCount = trainSpamFreq.get(key);
 
       float probSpam = (float)spamCount/(float)spamFileNum;
-      int hamCount =0;
+      int hamCount;
       if (null == trainHamFreq.get(key)){
         hamCount = 0;
       }
@@ -226,8 +219,6 @@ public class SpamDetector {
     try{
     isSpamProbability(new File("data/test/ham"));
     isSpamProbability(new File("data/test/spam"));
-  } catch (FileNotFoundException e) {
-    e.printStackTrace();
   } catch (IOException e) {
     e.printStackTrace();
   }
