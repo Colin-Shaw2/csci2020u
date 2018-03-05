@@ -13,7 +13,7 @@ public class SpamDetector {
   public static Map<String,Integer> trainHamFreq = new TreeMap<>();
   public static Map<String,Integer> trainSpamFreq = new TreeMap<>();
   public static Map<String,Float> probOfSpamGivenWord = new TreeMap<>();
-
+  public static ArrayList<TestFile> testedFiles = new ArrayList<>();
 
   public static Map<String, Integer> processFile(File file) throws IOException {
     Map<String,Integer> wordCounts = new TreeMap<>();
@@ -22,7 +22,26 @@ public class SpamDetector {
       // process all the files in that directory
       File[] contents = file.listFiles();
       for (File current: contents) {
-        wordCounts.putAll(processFile(current));
+        Map<String,Integer> temp = new TreeMap<>();
+        temp = processFile(current);
+
+        Set<String> keys = temp.keySet();
+        Iterator<String> keyIterator = keys.iterator();
+
+        while (keyIterator.hasNext()) {
+          String key = keyIterator.next();
+          int count = temp.get(key);
+
+            if (wordCounts.containsKey(key)) {
+              int oldCount = wordCounts.get(key);
+              wordCounts.put(key, oldCount+count);
+            } else {
+              wordCounts.put(key, 1);
+            }
+
+
+        }
+
       }
     } else if (file.exists()) {
       filenum++;
@@ -36,8 +55,8 @@ public class SpamDetector {
           wordCounts = countWord(word, wordCounts);
           counted.add(word);
         }
-        counted.clear();
       }
+      counted.clear();
     }
     return wordCounts;
   }
@@ -100,6 +119,33 @@ public class SpamDetector {
     }
   }
 
+
+  public static void isSpamProbability(File file) throws IOException {
+    if (file.isDirectory()) {
+      System.out.println("Testing " + file.getAbsolutePath() + "...");
+      // process all the files in that directory
+      File[] contents = file.listFiles();
+      for (File current: contents) {
+        isSpamProbability(current);
+      }
+    } else if (file.exists()) {
+      Scanner scanner = new Scanner(file);
+      double probSum=0;
+      scanner.useDelimiter("\\s");//"[\s\.;:\?\!,]");//" \t\n.;,!?-/\\");
+      while (scanner.hasNext()) {
+        String word = scanner.next().toLowerCase();
+        if (isWord(word)) {
+          if(null!=probOfSpamGivenWord.get(word)){
+            probSum += (Math.log(1-probOfSpamGivenWord.get(word))-Math.log(probOfSpamGivenWord.get(word)));
+          }
+        }
+      }
+      double probEst = 1/(1+Math.pow(Math.E,probSum));
+      testedFiles.add(new TestFile(file.getName(),probEst,file.getParent()));
+    }
+  }
+
+
   public static void main(String[] args) {
     if (args.length < 2) {
       System.err.println("Usage: java SpamDetector <dir/ham> <dir/spam>");
@@ -118,7 +164,7 @@ public class SpamDetector {
     //Map<String,Integer> trainHamFeq;
     try {
       trainHamFreq = processFile(hamDir);
-    //  outputWordCounts(1, outFileHam, trainHamFreq);
+      //outputWordCounts(1, outFileHam, trainHamFreq);
       hamFileNum = filenum;
       filenum=0;
 
@@ -167,16 +213,24 @@ public class SpamDetector {
 
       float probHam = (float)hamCount/(float)hamFileNum;
 
-      System.out.println(probHam+probSpam);
       if(probHam+probSpam!=0){
         probOfSpamGivenWord.put(key, (probSpam/(probSpam+probHam)));
       }
       else{
         probOfSpamGivenWord.put(key, (float)0);
       }
-      System.out.println(probOfSpamGivenWord.get(key));
 
     }
+
+
+    try{
+    isSpamProbability(new File("data/test/ham"));
+    isSpamProbability(new File("data/test/spam"));
+  } catch (FileNotFoundException e) {
+    e.printStackTrace();
+  } catch (IOException e) {
+    e.printStackTrace();
+  }
 
   }
 }
