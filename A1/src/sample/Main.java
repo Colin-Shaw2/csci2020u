@@ -1,6 +1,4 @@
-//package sample;
-
-//import sample;
+//Colin Shaw 100628526
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,7 +15,7 @@ import java.io.File;
 public class Main extends Application {
     private TableView<TestFile> spamTable;
 
-    //Our variables for the simple application
+
     private TextField accuracy, precision;
 
 
@@ -29,6 +27,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
 
+        //choose the data file
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setInitialDirectory(new File("."));
         File mainDirectory = directoryChooser.showDialog(primaryStage);
@@ -37,9 +36,9 @@ public class Main extends Application {
         GridPane layout = new GridPane();
 
 
-        primaryStage.setTitle("A1");
+        primaryStage.setTitle("Spam Master 9000");
 
-
+        //this sets up the table
         TableColumn<TestFile, Integer> fileCol = new TableColumn<>("FILE");
         fileCol.setPrefWidth(350);
         fileCol.setCellValueFactory(new PropertyValueFactory<>("Filename"));
@@ -61,6 +60,7 @@ public class Main extends Application {
         spamTable.getColumns().add(fileCol);
         spamTable.getColumns().add(classCol);
         spamTable.getColumns().add(probCol);
+        //this calls and runs Spamdetector and gets the list of TestFiles
         SpamDetector.main(new String[]{mainDirectory.getAbsolutePath()});
         ObservableList<TestFile> oListTestFile = FXCollections.observableArrayList(SpamDetector.getTestedFiles());
         spamTable.setItems(oListTestFile);
@@ -69,15 +69,14 @@ public class Main extends Application {
 
 
 
-        //Set our variables
-
+        //calls the getAccuracy function
         double accuracy = SpamDetector.getAccuracy();
         Label accuracyLabel = new Label("Accuracy: " + accuracy);
 
         layout.add(accuracyLabel,0,1);
 
 
-
+        //calls the getPrecision function
         double precision = SpamDetector.getPrecision();
         Label precisionLabel = new Label("Precision: " + precision);
         layout.add(precisionLabel,0,2);
