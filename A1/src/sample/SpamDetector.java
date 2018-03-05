@@ -13,8 +13,8 @@ public class SpamDetector {
   //private Map<String,Integer> trainSpamFreq;
 
   private static int filenum =0;
-  private static int hamFileNum =0;
-  private static int spamFileNum =0;
+  private static float hamFileNum =0;
+  private static float spamFileNum =0;
   private static Map<String,Integer> trainHamFreq = new TreeMap<>();
   private static Map<String,Integer> trainSpamFreq = new TreeMap<>();
   private static Map<String,Float> probOfSpamGivenWord = new TreeMap<>();
@@ -131,8 +131,13 @@ public class SpamDetector {
       while (scanner.hasNext()) {
         String word = scanner.next().toLowerCase();
         if (isWord(word)) {
-          if(null!=probOfSpamGivenWord.get(word)){
-            probSum += (Math.log(1-probOfSpamGivenWord.get(word))-Math.log(probOfSpamGivenWord.get(word)));
+          if(null == probOfSpamGivenWord.get(word)){//we never saw this word
+          }
+          else if(0 == probOfSpamGivenWord.get(word)){//only in ham files
+            System.err.println("Error prob was 0");
+          }
+          else if(null!=probOfSpamGivenWord.get(word)){
+            probSum += ((Math.log(1-probOfSpamGivenWord.get(word)))-(Math.log(probOfSpamGivenWord.get(word))));
           }
         }
       }
@@ -150,24 +155,14 @@ public class SpamDetector {
     }
 
   public static ArrayList<TestFile> runAll(String[] args){
-    if (args.length < 2) {
-      System.err.println("Usage: java SpamDetector <dir/ham> <dir/spam>");
-      //System.exit(0);
-    }
 
-  //  File hamDir = new File(args[0]);
-    //File spamDir = new File(args[1]);
-    File hamDir = new File("data/train/ham");
+    File hamDir = new File("data/train/ham2");
     File spamDir = new File("data/train/spam");
-    File outFileHam = new File("hamWords.txt");
-    File outFileSpam = new File("spamWords.txt");
 
 
 
-    //Map<String,Integer> trainHamFeq;
     try {
       trainHamFreq = processFile(hamDir);
-      //outputWordCounts(1, outFileHam, trainHamFreq);
       hamFileNum = filenum;
       filenum=0;
 
@@ -182,7 +177,6 @@ public class SpamDetector {
 
     try {
       trainSpamFreq = processFile(spamDir);
-      //outputWordCounts(1, outFileSpam, trainSpamFreq);
       spamFileNum = filenum;
       filenum=0;
 
@@ -195,8 +189,7 @@ public class SpamDetector {
 
 
 
-    //We are only going to look through the spam map because if the word is
-    //only in the ham map the result is always 0
+    //first we look through spam map
 
     Set<String> keys = trainSpamFreq.keySet();
     Iterator<String> keyIterator = keys.iterator();
@@ -205,10 +198,11 @@ public class SpamDetector {
       String key = keyIterator.next();
       int spamCount = trainSpamFreq.get(key);
 
-      float probSpam = (float)spamCount/(float)spamFileNum;
+      float probSpam = (float)(spamCount)/(float)(spamFileNum);
+            if(probSpam==0){System.err.println("UHOH");}
       int hamCount;
       if (null == trainHamFreq.get(key)){
-        hamCount = 0;
+        hamCount = 1;
       }
       else{
         hamCount = trainHamFreq.get(key);
@@ -216,11 +210,27 @@ public class SpamDetector {
 
       float probHam = (float)hamCount/(float)hamFileNum;
 
+
+
       if(probHam+probSpam!=0){
         probOfSpamGivenWord.put(key, (probSpam/(probSpam+probHam)));
       }
-      else{
-        probOfSpamGivenWord.put(key, (float)0);
+      else{//we never saw this word
+        System.err.println("ERROR SOMEING WENT WRONG");
+        probOfSpamGivenWord.put(key, (float)0.5);
+      }
+    }
+
+    //this goes through all words only found in ham files
+    keys = trainHamFreq.keySet();
+    keyIterator = keys.iterator();
+
+    while (keyIterator.hasNext()) {
+      String key = keyIterator.next();
+      float hamCount = trainHamFreq.get(key);
+
+      if(null == trainSpamFreq.get(key)){
+        probOfSpamGivenWord.put(key, (1/(float)spamFileNum)/((1/(float)spamFileNum)+(hamCount/(float)hamFileNum)));
       }
     }
 
